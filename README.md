@@ -1,6 +1,8 @@
 # Heat Pad
 
-A small battery-powered pad that warms up when someone stands close. The thermo-graphics visible once the pad is warm, and disappears again as the pad cools.
+![Heat pad warming until the heart shows through the paint](docs/HeatPad.gif)
+
+Battery-powered pad that warms up when someone stands close. The thermo-graphics visible once the pad is warm, and disappears again as the pad cools.
 
 The controller is an Adafruit ESP32-S3 TFT Feather. It reads a time-of-flight distance sensor, turns a boost converter on and off to feed the heat pad, and draws the live distance, battery level, and heart on its screen. There is no temperature sensor. Timing stands in for how hot the pad is.
 
