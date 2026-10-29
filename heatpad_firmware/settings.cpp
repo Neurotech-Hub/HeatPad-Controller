@@ -53,6 +53,7 @@ static bool valuesOk() {
 static void saveAll() {
   prefs.begin(NVS_NS, false);
   prefs.putUInt("heat", HEAT_UP_MS);
+  // Keys stay "on" and "off". The serial names are pwm-on and pwm-off.
   prefs.putUInt("on", HOLD_ON_MS);
   prefs.putUInt("off", HOLD_OFF_MS);
   prefs.putUInt("near", ON_CM);
@@ -91,10 +92,10 @@ void settingsPrint() {
   Serial.print(F("heat "));
   Serial.print(HEAT_UP_MS);
   Serial.println(F(" ms"));
-  Serial.print(F("on "));
+  Serial.print(F("pwm-on "));
   Serial.print(HOLD_ON_MS);
   Serial.println(F(" ms"));
-  Serial.print(F("off "));
+  Serial.print(F("pwm-off "));
   Serial.print(HOLD_OFF_MS);
   Serial.println(F(" ms"));
   Serial.print(F("near "));
@@ -111,8 +112,8 @@ void settingsPrint() {
 static void printHelp() {
   Serial.println(F("get"));
   Serial.println(F("set heat <ms>"));
-  Serial.println(F("set on <ms>"));
-  Serial.println(F("set off <ms>"));
+  Serial.println(F("set pwm-on <ms>"));
+  Serial.println(F("set pwm-off <ms>"));
   Serial.println(F("set near <cm>"));
   Serial.println(F("set far <cm>"));
   Serial.println(F("set cool <ms>"));
@@ -156,15 +157,15 @@ static void handleSet(char* name, char* valueToken) {
     return;
   }
 
-  if (sameWord(name, "heat") || sameWord(name, "on") || sameWord(name, "off") ||
+  if (sameWord(name, "heat") || sameWord(name, "pwm-on") || sameWord(name, "pwm-off") ||
       sameWord(name, "cool")) {
     if (!timeOk(value)) {
       Serial.println(F("error time must be 50-60000 ms"));
       return;
     }
     if (sameWord(name, "heat")) HEAT_UP_MS = value;
-    else if (sameWord(name, "on")) HOLD_ON_MS = value;
-    else if (sameWord(name, "off")) HOLD_OFF_MS = value;
+    else if (sameWord(name, "pwm-on")) HOLD_ON_MS = value;
+    else if (sameWord(name, "pwm-off")) HOLD_OFF_MS = value;
     else COOL_MS = value;
   } else if (sameWord(name, "near") || sameWord(name, "far")) {
     if (!distOk(value)) {

@@ -1,0 +1,32 @@
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Arduino build output
+build/
+*.elf
+*.hex
+*.map
+
+# KiCad backups, lock files, and local history
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.kicad_prl
+*.bak
+*.bck
+*-backups/
+_autosave-*
+*.tmp
+*-save.kicad_pcb
+*-save.kicad_sch
+fp-info-cache
+~*.lck
+**/.history/

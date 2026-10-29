@@ -237,7 +237,8 @@ void uiBegin() {
   pinMode(TFT_BACKLITE, OUTPUT);
   digitalWrite(TFT_BACKLITE, HIGH);
   tft.init(135, 240);
-  tft.setRotation(3);
+  // Landscape, 180 degrees from rotation 3, so the picture matches the board.
+  tft.setRotation(1);
   tft.setTextWrap(false);
   tft.fillScreen(ST77XX_BLACK);
   painted = false;

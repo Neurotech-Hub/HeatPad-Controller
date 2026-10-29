@@ -39,10 +39,10 @@ constexpr uint8_t PIN_LED = 13;
 // in flash. See settings.cpp. Distances are centimeters.
 constexpr uint16_t DEFAULT_ON_CM = 35;
 constexpr uint16_t DEFAULT_OFF_CM = 40;
-constexpr uint32_t DEFAULT_HEAT_UP_MS =10000UL;
-constexpr uint32_t DEFAULT_HOLD_ON_MS = 200UL;
+constexpr uint32_t DEFAULT_HEAT_UP_MS = 20000UL;
+constexpr uint32_t DEFAULT_HOLD_ON_MS = 100UL;
 constexpr uint32_t DEFAULT_HOLD_OFF_MS = 100UL;
-constexpr uint32_t DEFAULT_COOL_MS = 3000UL;
+constexpr uint32_t DEFAULT_COOL_MS = 10000UL;
 
 extern uint16_t ON_CM;
 extern uint16_t OFF_CM;

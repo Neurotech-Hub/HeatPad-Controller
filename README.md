@@ -1,95 +1,58 @@
 # Heat Pad
 
-Firmware for an Adafruit ESP32-S3 TFT Feather that warms a heat pad when someone stands close. A white heart printed on black fabric is covered with black thermochromic paint. When the pad is warm the paint turns clear and the heart shows. When it cools, the paint goes black again and the heart disappears.
+A small battery-powered pad that warms up when someone stands close. The thermo-graphics visible once the pad is warm, and disappears again as the pad cools.
 
-The Feather reads a time-of-flight sensor, drives a Pololu U3V70A boost regulator, and draws the live distance, battery level, and heart on its built-in screen.
+The controller is an Adafruit ESP32-S3 TFT Feather. It reads a time-of-flight distance sensor, turns a boost converter on and off to feed the heat pad, and draws the live distance, battery level, and heart on its screen. There is no temperature sensor. Timing stands in for how hot the pad is.
 
-## Hardware
+Firmware source is in [`heatpad_firmware`](heatpad_firmware). That folder’s README covers wiring and how to upload the sketch.
 
-- Adafruit ESP32-S3 TFT Feather (#5483)
-- VL53L0X, VL53L1X, or VL53L4CD on the STEMMA QT port (I2C address 0x29)
-- Pololu U3V70A step-up regulator (#2890), output set to V_PAD
-- Heat pad on the regulator output
-- One LiPo for the Feather JST connector and the regulator VIN
-- Indicator on GPIO 13 (the on-board red LED, or an external LED)
+## Firmware settings
 
-V_PAD is whatever voltage the regulator potentiometer is set to. Set it with a meter before connecting the pad. Clockwise raises the output. Do not let the battery voltage exceed V_PAD, or the pad sees the raw battery instead of the regulated output.
+You can change how the pad behaves without uploading new code. Type a command in the Serial Monitor and press Enter.
 
-The boost draws more current from the cell than the pad draws at V_PAD. The pack has to be rated for that.
+These settings stay programmed even after a reset or a power cycle. The board stores them in flash, so unplugging the battery does not erase them. They stay in place until you send `defaults`, or until you upload a sketch with Arduino’s “Erase all flash before sketch upload” option turned on.
 
-## Wiring
+| Setting | What it does | Factory value |
+| --- | --- | --- |
+| `heat` | How long the pad stays fully on after someone is first detected. This is the warm-up. | 20000 ms (20 s) |
+| `pwm-on` | After the warm-up, the pad pulses to hold temperature. This is how long each pulse stays on. | 100 ms |
+| `pwm-off` | How long each pulse stays off. A shorter off time keeps the pad hotter. A longer off time lets it cool more. | 100 ms |
+| `near` | Distance at which the pad starts heating. The person must be this close, or closer. | 35 cm |
+| `far` | Distance at which the pad turns off. The person must be farther than this. | 40 cm |
+| `cool` | After the person walks away, how long the heart on the screen takes to fade. This does not change how fast the paint itself cools. | 10000 ms (10 s) |
 
-Common ground between the Feather, the regulator, and the pad.
+`near` has to be a smaller number than `far`. That gap is the difference between “someone stepped in” and “someone walked away.”
 
-| Signal | Connection |
-| --- | --- |
-| Time-of-flight | Feather STEMMA QT |
-| U3V70A ENABLE | GPIO 16 (`PIN_HEAT_EN`). High turns V_PAD on. Low turns it off. |
-| Indicator LED | GPIO 13 |
-| LiPo | Feather JST and U3V70A VIN |
-| Heat pad | U3V70A VOUT |
+Times must be from 50 to 60000 milliseconds. Distances must be from 1 to 200 centimeters. A number outside those limits is rejected, and the old value stays as it was. If a pulse is already running, it finishes the current on or off interval, then uses the new time.
 
-V_PAD is present only while GPIO 16 is driven high. Leaving that pin low, or as an input, keeps the pad off.
+### Commands
 
-## Behavior
+| Command           | What it does                                                       |
+| ----------------- | ------------------------------------------------------------------ |
+| `get`             | Print the settings in use, and whether they were loaded from flash |
+| `set heat 15000`  | Set the warm-up time, in milliseconds                              |
+| `set pwm-on 500`  | Set the hold pulse on time, in milliseconds                        |
+| `set pwm-off 400` | Set the hold pulse off time, in milliseconds                       |
+| `set near 35`     | Start heating at or under this distance, in centimeters            |
+| `set far 45`      | Stop heating beyond this distance, in centimeters                  |
+| `set cool 5000`   | Set how long the on-screen heart takes to fade, in milliseconds    |
+| `defaults`        | Put the factory numbers back and erase the saved copy              |
+| `help`            | List the commands                                                  |
 
-There is no temperature sensor. Timing stands in for the paint.
+Pins, how many readings are required before the pad reacts, and the low-battery cutoff live in `heatpad_firmware/config.h`. Those need a new upload to change.
 
-1. Three readings at or under 35 cm start a heat-up. V_PAD stays on continuously for 5 s. The on-screen heart fills to solid red.
-2. The hold loop starts with an off step, because the heat-up just ended. Factory timing is 500 ms on and 100 ms off, repeating while the person stays in range. During each off step the heart eases down slightly (about 8 percent) and the next on step brings it back to full red. GPIO 13 follows the enable pin.
-3. Five readings beyond 40 cm turn V_PAD off. The heart empties over 3 s. Stepping back in before it has cooled resumes from the level still on screen.
+## Bill of materials
 
-The heater also stays off when the cell reads below 3.7 V while the pad is drawing current. Heating is allowed again only after 30 seconds and once the resting cell is back above 3.85 V. It also stays off when the battery is under 10 percent (heating is allowed again above 15 percent) or when the distance sensor stops answering. A low battery shows `LOW BATTERY` in the center of the screen and `LOW BATT` on the state line. A dead sensor shows `SENSOR ERR`.
+| Part | Notes | Link |
+| --- | --- | --- |
+| Heat pad | Fabric pad warmed by the boost output | [Amazon](https://a.co/d/0cVdlTN0) |
+| Time-of-flight sensor | Distance sensor on the Feather STEMMA QT port | [Adafruit 3967](https://www.adafruit.com/product/3967) |
+| ESP32-S3 TFT Feather | Controller and display | [Adafruit 5483](https://www.adafruit.com/product/5483) |
+| Adjustable boost converter | Pololu 2890. The potentiometer sets the output, up to 20 V. This build uses 5 V. Set and check the voltage with a meter before connecting the pad. | [DigiKey](https://www.digikey.com/en/products/detail/pololu/2890/10451201) |
+| Battery | LiPo for the Feather and the boost input | [Adafruit 1781](https://www.adafruit.com/product/1781) |
 
-## Display
+## Enclosure
 
-At boot the screen traces a heart, fills it, pulses it, and shows the title. The main screen shows battery percent and voltage, distance in centimeters (`---` when nobody is in range), the heater state, and the heart.
+The enclosure design is on Autodesk Fusion: [https://a360.co/4A1Bd32](https://a360.co/4A1Bd32)
 
-## Build
-
-Open this folder in the Arduino IDE. The sketch name matches the folder name.
-
-1. Install the Espressif ESP32 boards package.
-2. Select **Adafruit Feather ESP32-S3 TFT**.
-3. Install these libraries from the Library Manager:
-   - Adafruit ST7735 and ST7789 Library (pulls in Adafruit GFX)
-   - Adafruit BusIO
-   - Adafruit VL53L0X
-   - Adafruit VL53L1X
-   - STM32duino VL53L4CD
-   - Adafruit MAX1704X
-   - Adafruit LC709203F
-
-Upload, then open the Serial Monitor at **115200** baud with a newline ending.
-
-## Serial settings
-
-`heat`, `on`, `off`, `near`, `far`, and `cool` can be changed without reflashing. Each accepted `set` takes effect immediately and is stored in flash, so it remains after reset and after the battery is unplugged. A full flash erase (Arduino option "Erase all flash before sketch upload") or the `defaults` command clears the saved copy.
-
-| Command | Effect |
-| --- | --- |
-| `get` | Print the active values and whether they came from flash |
-| `set heat 4000` | Continuous on time after a new detection, in milliseconds |
-| `set on 1000` | Hold on time, in milliseconds |
-| `set off 500` | Hold off time, in milliseconds |
-| `set near 35` | Turn on at or under this distance, in centimeters |
-| `set far 45` | Turn off beyond this distance, in centimeters |
-| `set cool 2500` | Heart cool-down after the person leaves, in milliseconds |
-| `defaults` | Restore the factory numbers and erase the saved copy |
-| `help` | List the commands |
-
-Times must be 50–60000 ms. Distances must be 1–200 cm, and `near` must stay below `far`. A rejected value leaves the current setting unchanged. A pulse already in progress finishes its current on or off interval, then uses the new time.
-
-Factory defaults are 5000 ms heat, 500 ms on, 100 ms off, 35 cm near, 40 cm far, and 3000 ms cool.
-
-Pins, sample counts, and the battery cutoff stay in `config.h` and need a recompile to change.
-
-## Files
-
-| File | Role |
-| --- | --- |
-| `Heat_Pad.ino` | Setup, heater state machine, V_PAD enable and LED |
-| `config.h` | Pins, factory defaults, and fixed limits |
-| `settings.cpp` | Serial commands and flash storage |
-| `sensors.cpp` | Time-of-flight ranging and the fuel gauge |
-| `ui.cpp` | Splash animation and the main screen |
+The circuit board design is in [`KiCAD/Heat_Pad_v1.0`](KiCAD/Heat_Pad_v1.0).
