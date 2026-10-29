@@ -1,4 +1,4 @@
-# Heat Pad
+# Heat Pad Controller
 
 ![Heat pad warming until the heart shows through the paint](docs/HeatPad.gif)
 
